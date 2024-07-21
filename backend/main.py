@@ -29,15 +29,40 @@ def add_password():
 
 @app.route("/update_password/<int:pid>", methods=['PATCH'])
 def update_password(pid):
-    password = entry.query.get(pid)
+    pwd = entry.query.get(pid)
     
-    if not password:
+    if not pwd:
         return jsonify({"message": "Password not found"}), 404
     
+    data = request.json
+    pwd.platform = data.get("platform", pwd.platform)
+    pwd.userName = data.get("userName", pwd.userName)
+    pwd.password = data.get("userName", pwd.password)
+    
+    try:
+        db.session.commit()
+    except Exception as e:
+        return (jsonify({"message" : str(e)}), 400)
+    
+    return jsonify({"message": "Password updated."}), 200
+
+@app.route("/delete_password/<int:pid>", methods=["DELETE"])
+def delete_password(pid):
+    pwd = entry.query.get(pid)
+    
+    if not pwd:
+        return jsonify({"message": "Password not found"}), 404
+    
+    try:
+        db.session.delete(pwd)
+        db.session.commit()
+    except Exception as e:
+        return (jsonify({"message" : str(e)}), 400)
+    
+    return jsonify({"message": "Password deleted!"}), 200
     
 if __name__ == "__main__":
-    
     with app.app_context():
         db.create_all()
-    
+        
     app.run(debug=True)
